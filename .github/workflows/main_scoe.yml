@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy JAR app to Azure Web App - scoe
+name: Build and deploy ASP.Net Core app to Azure Web App - scoe
 
 on:
   push:
@@ -18,20 +18,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Java version
-        uses: actions/setup-java@v4
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
         with:
-          java-version: '17'
-          distribution: 'microsoft'
+          dotnet-version: '8.0'
 
-      - name: Build with Maven
-        run: mvn clean install
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
     runs-on: ubuntu-latest
@@ -39,12 +41,12 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-      
+    
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: java-app
+          name: .net-app
       
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -52,5 +54,5 @@ jobs:
         with:
           app-name: 'scoe'
           slot-name: 'Production'
-          package: '*.jar'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7C44FF7EF0CA4CEE9665E6CE4D88B5A6 }}
+          package: .
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FE5E03AAACA9469EBCBE00CAF6C1B378 }}
